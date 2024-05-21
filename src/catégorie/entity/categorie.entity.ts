@@ -5,11 +5,12 @@ import { User } from 'src/users/entity/user.entity';
 import { Menu } from 'src/menu/entity/menu.entity';
 import { Repas } from 'src/repas/entity/repas.entity';
 import { PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
+export type CategorieDocument = Categorie & Document;
 
 @Schema()
 export class Categorie {
-  @PrimaryGeneratedColumn()
-  id: string;
+  @Prop({ required: true }) // Assurez-vous d'ajouter cette ligne pour la propriété name
+  name: string;
 
   @ManyToOne(() => User, user => user.categories)
   user: User;

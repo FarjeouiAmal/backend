@@ -6,39 +6,34 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { SignInDto } from './dto/SignIn.dto';
-import { MailerService } from '@nestjs-modules/mailer';
-import { UserService } from 'src/users/user.service';
-import * as crypto from 'crypto';
-import { User, UserDocument } from 'src/users/entity/user.entity';
 import { MailService } from './mail/mail.service';
-
+import { UserService } from 'src/users/user.service';
+import { User, UserDocument } from 'src/users/entity/user.entity';
+import { PasswordResetDto } from './dto/password-reset.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name)
-    private UserModel: Model<UserDocument>,
+    private userModel: Model<UserDocument>,
     private jwtService: JwtService,
     private readonly mailService: MailService,
-    private readonly userService: UserService, 
+    private readonly userService: UserService,
   ) {}
 
   async createDefaultAdmin(): Promise<void> {
     const adminUser = {
-
       email: 'adminadmin@gmail.com',
       password: 'admin123',
       name: 'admin',
       role: 'admin',
     };
 
-    // Check if the default admin user already exists
-    const existingAdmin = await this.UserModel.findOne({ email: adminUser.email });
+    const existingAdmin = await this.userModel.findOne({ email: adminUser.email });
 
     if (!existingAdmin) {
-      // Create the default admin user if it doesn't exist
       const hashedPassword = await bcrypt.hash(adminUser.password, 10);
-      await this.UserModel.create({
+      await this.userModel.create({
         ...adminUser,
         password: hashedPassword,
       });
@@ -48,15 +43,11 @@ export class AuthService {
   async registerUser(userDto: any): Promise<void> {
     const { email, password, name, role } = userDto;
 
-    // Check if the user already exists
-    const existingUser = await this.UserModel.findOne({ email });
+    const existingUser = await this.userModel.findOne({ email });
 
     if (!existingUser) {
-      // Hash the password before saving the user
       const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Create the user
-      await this.UserModel.create({
+      await this.userModel.create({
         email,
         password: hashedPassword,
         name,
@@ -68,7 +59,7 @@ export class AuthService {
   async signIn(signInDto: SignInDto): Promise<{ token: string }> {
     const { email, password } = signInDto;
   
-    const user = await this.UserModel.findOne({ email: email.trim() });
+    const user = await this.userModel.findOne({ email: email.trim() });
   
     if (user) {
       const passwordMatches = await bcrypt.compare(password, user.password);
@@ -87,7 +78,7 @@ export class AuthService {
   
 
   async findUserByResetToken(token: string): Promise<UserDocument | null> {
-    const user = await this.UserModel.findOne({
+    const user = await this.userModel.findOne({
       resetToken: token,
       resetTokenExpires: { $gt: new Date() },
     });
@@ -99,79 +90,47 @@ export class AuthService {
     return user;
   }
 
-
   async forgotPassword(email: string): Promise<void> {
     const user = await this.userService.findByEmail(email);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetLink = `http://localhost:3004/auth/reset-password/${resetToken}`;
-
-    // Update user data with reset token and expiration
-    user.resetToken = resetToken;
-    user.resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour expiry
-    await this.userService.save(user);
-
-    // Send password reset email
-    await this.mailService.sendPasswordResetEmail(email, resetLink);
+  
+    const token = this.jwtService.sign({ email }, { expiresIn: '1h' });
+  
+    const resetLink = `http://localhost:3003/reset-password/${token}`;
+  
+    await this.mailService.sendResetPasswordEmail(email, resetLink);
   }
 
-  // async sendPasswordResetEmail(email: string): Promise<void> {
-  //   const user = await this.userService.findByEmail(email);
-
-  //   if (user) {
-  //     const resetToken = crypto.randomBytes(32).toString('hex');
-  //     user.resetToken = resetToken;
-  //     user.resetTokenExpires = new Date(Date.now() + 3600000);
-  //     await this.userService.save(user);
-
-  //     const resetLink = `http://localhost:3004/auth/forgot-password/${resetToken}`;
-  //     await this.mailerService.sendMail({
-  //       to: user.email,
-  //       subject: 'Password Reset',
-  //       template: 'password-reset', // Ensure the template exists
-  //       context: { resetLink },
-  //     });
-  //   }
-  // }
-
-  async resetPassword(token: string, newPassword: string): Promise<string> {
+  async resetPassword(token: string, passwordResetDto: PasswordResetDto): Promise<void> {
     try {
-      // Verify the reset token
-      const decodedToken = this.jwtService.verify(token);
-      console.log("token", decodedToken)
-      if (!decodedToken ) {
-        throw new NotFoundException("Invalid or expired token");
+      const decoded = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+      const email = decoded.email;
+      if (!email) {
+        throw new NotFoundException('User not found');
       }
-  
-      // Retrieve the user using the decoded user ID
-      const userId = decodedToken.id;
-      const user = await this.UserModel.findById(userId);
+
+      const user = await this.userService.findByEmail(email);
       if (!user) {
-        throw new NotFoundException("User not found");
+        throw new NotFoundException('User not found');
       }
-  
-      // Hash the new password
-      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-  
-      // Update the user's password
-      user.password = hashedNewPassword;
+
+      const hashedPassword = await bcrypt.hash(passwordResetDto.newPassword, 10);
+      user.password = hashedPassword;
       await user.save();
-  
-      return "Password updated successfully.";
     } catch (error) {
-      // Handle any errors and throw appropriate exceptions
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new BadRequestException("Failed to reset password");
+      throw new BadRequestException('Invalid token');
     }
   }
-  
 
-
+  async generateResetToken(email: string): Promise<string> {
+    const payload = { email };
+    return this.jwtService.sign(payload, {
+      secret: process.env.JWT_SECRET,
+      expiresIn: '1h',
+    });
+  }
 
   async decodeToken(token: string): Promise<any> {
     try {
@@ -182,26 +141,19 @@ export class AuthService {
     }
   }
 
-
   generateAccessToken(user: UserDocument): string {
     const { _id, name, email, role } = user;
     return this.jwtService.sign({ id: _id, name, email, role });
   }
-  
-
-
 
   async refreshToken(refreshToken: string): Promise<string> {
-    const user = await this.UserModel.findOne({ refreshToken });
+    const user = await this.userModel.findOne({ refreshToken });
   
     if (!user) {
       throw new UnauthorizedException('Invalid refresh token');
     }
   
-    // Assuming you have a method to generate a new access token for the user
     const newAccessToken = this.generateAccessToken(user);
-  
     return newAccessToken;
   }
-  
 }

@@ -12,10 +12,11 @@ export class AuthController {
 
  
   @Post('signin')
-  async signIn(@Body() signInDto: SignInDto): Promise<{ token: string }> {
+  async signIn(@Body() signInDto: SignInDto): Promise<{ token: string, role: string }> {
     try {
       const result = await this.authService.signIn(signInDto);
-      return { token: result.token };
+      const decodedToken = await this.authService.decodeToken(result.token);
+      return { token: result.token, role: decodedToken.role };
     } catch (error) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -25,30 +26,24 @@ export class AuthController {
   async forgotPassword(@Body() body: { email: string }) {
     try {
       await this.authService.forgotPassword(body.email);
-      // You may choose to return a success response or simply acknowledge the request
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
-@Post('reset-password/:token')
-async resetPassword(@Body() body: PasswordResetDto, @Param('token') token: string) {
-  try {
-    // Extract the new password from the request body
-    const { newPassword } = body;
-
-    // Call resetPassword method of AuthService
-    const message = await this.authService.resetPassword(token, newPassword);
-
-    return { message }; // Return success message
-  } catch (error) {
-    // Catch any errors and throw corresponding HTTP exceptions
-    if (error instanceof NotFoundException) {
-      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+  @Post('reset-password/:token')
+  async resetPassword(
+    @Body() body: PasswordResetDto,
+    @Param('token') token: string,
+  ) {
+    try {
+      await this.authService.resetPassword(token, body); // Pass the PasswordResetDto object instead of just newPassword
+      return { message: 'Password reset successfully' };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
-    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
   }
-}
+
 
   @Get('/decode-token/:token')
   async decodeToken(@Param('token') token: string): Promise<any> {
@@ -60,6 +55,7 @@ async resetPassword(@Body() body: PasswordResetDto, @Param('token') token: strin
     }
   } 
 
+  
   @Post('/refresh')
   async refresh(@Body() body: { refreshToken: string }): Promise<{ token: string }> {
     try {

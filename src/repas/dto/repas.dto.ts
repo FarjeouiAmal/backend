@@ -18,4 +18,8 @@ export class CreateRepasDto {
   @IsOptional()
   @IsString()
   supplements?: string;
+
+  @IsNotEmpty() // Assuming category ID is required
+  @IsString()
+  categoryId: string; // New field for category ID
 }

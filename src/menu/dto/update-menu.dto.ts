@@ -1,4 +1,3 @@
-// update-menu.dto.ts
 import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class UpdateMenuDto {

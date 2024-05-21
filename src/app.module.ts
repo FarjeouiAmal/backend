@@ -1,17 +1,15 @@
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './users/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
-import { MailModule } from './auth/mail/mail.module';
 import { RepasModule } from './repas/repas.module';
-import { CategorieModule } from './catégorie/categorie.module';
 import { MenuModule } from './menu/menu.module';
-
- 
-
+import { MailModule } from './auth/mail/mail.module';
+import { CategorieModule } from './catégorie/categorie.module';
+import { OrdersModule } from './commande/commande.module';
 
 @Module({
   imports: [
@@ -26,15 +24,10 @@ import { MenuModule } from './menu/menu.module';
     RepasModule,
     CategorieModule,
     MenuModule,
+    OrdersModule
 
   ],
   controllers: [AppController],
   providers: [AppService],
-
-  
 })
-export class AppModule  {
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer.apply(AuthenticationMiddleware).forRoutes('*');
-  // }
-}
+export class AppModule {}

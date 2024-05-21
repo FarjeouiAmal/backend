@@ -5,6 +5,7 @@ import { Document } from 'mongoose';
 import { Menu } from 'src/menu/entity/menu.entity';
 import { Repas } from 'src/repas/entity/repas.entity';
 import { Categorie } from 'src/catégorie/entity/categorie.entity'; // Import Categorie entity
+import { Order } from 'src/commande/entity/commande.entity';
 
 export enum UserRole {
   RESTO = 'resto',
@@ -51,6 +52,10 @@ export class User {
 
   @OneToMany(() => Categorie, categorie =>  categorie.user) // Establishing the relationship with Categorie
   categories: Categorie[];
+
+  // @OneToMany(() => Order, commande => Order.user)
+  // commandes: Order[];
+
 
   @Prop()
   @Column({ nullable: true })

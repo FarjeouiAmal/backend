@@ -7,6 +7,8 @@ import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { User } from 'src/users/entity/user.entity';
 
+
+
 @Injectable()
 export class MenuService {
   constructor(
@@ -39,5 +41,13 @@ export class MenuService {
     if (result.deletedCount === 0) {
       throw new NotFoundException(`Menu with ID ${id} not found`);
     }
+    
   }
+
+  
+  async getMenu(user: User): Promise<Menu[]> {
+    // Fetch menu items based on the authenticated user
+    return await this.menuModel.find({ user: user }).exec();
+  }
+
 }

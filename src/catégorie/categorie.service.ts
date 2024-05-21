@@ -15,14 +15,11 @@ export class CategorieService {
   ) {}
 
   async createCategorie(user: User, createCategorieDto: CreateCategorieDto): Promise<Categorie> {
-    if (user.role !== 'resto') {
-      throw new ForbiddenException('Only users with the role "resto" can create categories.');
-    }
-
-    const categorie = new this.categorieModel({ user, ...createCategorieDto });
+    const { name } = createCategorieDto;
+    const categorie = new this.categorieModel({ user, name }); // Assurez-vous de passer le nom de la catégorie
     return await categorie.save();
   }
-
+  
   async updateCategorie(id: string, updateCategorieDto: UpdateCategorieDto): Promise<Categorie> {
     const categorie = await this.categorieModel.findById(id);
 

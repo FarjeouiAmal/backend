@@ -129,13 +129,14 @@ export class UserService {
 
   async updateUser(id: string, updateUserDto: Partial<UpdateUserDto>): Promise<User> {
     const user = await this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true });
-
+  
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-
+  
     return user;
   }
+  
 
 
   async deleteUserById(id: string): Promise<void> {
@@ -245,9 +246,18 @@ export class UserService {
         }
         return users;
       }
-    
 
-      
+      async countLivreur(): Promise<number> {
+        return await this.userModel.countDocuments({ role: 'livreur' });
+      }
+    
+      async countConsommateur(): Promise<number> {
+        return await this.userModel.countDocuments({ role: 'consommateur' });
+      }
+    
+      async countResto(): Promise<number> {
+        return await this.userModel.countDocuments({ role: 'resto' });
+      }
 
   async save(User: User): Promise<User> {
     return await User.save();

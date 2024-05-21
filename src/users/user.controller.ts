@@ -94,6 +94,24 @@ export class UserController {
   }
 
 
+  @Get('count/livreurs')
+  async countLivreur(): Promise<{ count: number }> {
+    const count = await this.userService.countLivreur();
+    return { count };
+  }
+
+  @Get('count/consommateurs')
+  async countConsommateur(): Promise<{ count: number }> {
+    const count = await this.userService.countConsommateur();
+    return { count };
+  }
+
+  @Get('count/restos')
+  async countResto(): Promise<{ count: number }> {
+    const count = await this.userService.countResto();
+    return { count };
+  }
+
   
 
 

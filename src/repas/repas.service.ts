@@ -1,22 +1,38 @@
 // repas.service.ts
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateRepasDto } from './dto/repas.dto';
 import { Repas, RepasDocument } from './entity/repas.entity';
+import mongoose from 'mongoose';
+import { Categorie, CategorieDocument } from 'src/catégorie/entity/categorie.entity';
+
 
 @Injectable()
 export class RepasService {
   constructor(
     @InjectModel(Repas.name)
     private readonly repasModel: Model<RepasDocument>,
+    @InjectModel(Categorie.name)
+    private readonly categorieModel: Model<CategorieDocument>,
   ) {}
 
   async createRepas(createRepasDto: CreateRepasDto): Promise<Repas> {
-    const repas = new this.repasModel(createRepasDto);
+    const { categoryId, ...repasData } = createRepasDto;
+  
+  
+    // Now you can proceed with creating the Repas object
+    const category = await this.categorieModel.findById(categoryId);
+    if (!category) {
+      throw new NotFoundException(`Category with ID ${categoryId} not found`);
+    }
+    
+    const repas = new this.repasModel({ ...repasData, categoryId: categoryId });
     return await repas.save();
   }
+  
+  
 
   async updateRepas(id: string, updateRepasDto: CreateRepasDto): Promise<Repas> {
     const repas = await this.repasModel.findByIdAndUpdate(id, updateRepasDto, { new: true });
@@ -41,6 +57,17 @@ export class RepasService {
 
     if (!repas) {
       throw new NotFoundException(`Repas with ID ${id} not found`);
+    }
+
+    return repas;
+  }
+
+
+  async getRepasByCategoryId(categoryId: string): Promise<Repas[]> {
+    const repas = await this.repasModel.find({categoryId});
+
+    if (!repas) {
+      throw new NotFoundException(`Repas with category ID ${categoryId} not found`);
     }
 
     return repas;
