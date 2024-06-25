@@ -44,6 +44,13 @@ export class User {
   @Column({ type: 'enum', enum: UserRole, default: UserRole.CONSOMMATEUR })
   role: UserRole;
 
+  @Column({ default: true })
+  isActive: boolean;
+  
+  @Prop()
+  @Column({ nullable: true })
+  imagePath: string;
+
   @OneToMany(() => Menu, menu => menu.user)
   menus: Menu[];
 

@@ -11,12 +11,14 @@ import { MailModule } from './auth/mail/mail.module';
 import { CategorieModule } from './catégorie/categorie.module';
 import { OrdersModule } from './commande/commande.module';
 
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
     }),
+   
     MongooseModule.forRoot(process.env.DB_URI),
     UserModule,
     AuthModule,

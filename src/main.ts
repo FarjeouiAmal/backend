@@ -1,11 +1,12 @@
-// src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { AuthService } from './auth/auth.service';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const authService = app.get(AuthService);
   await authService.createDefaultAdmin();
@@ -20,7 +21,11 @@ async function bootstrap() {
     credentials: true,
     optionsSuccessStatus: 204,
   });
+  
+  // Servir les fichiers statiques depuis le répertoire uploads
+  app.useStaticAssets(join(__dirname, '..', 'uploads'));
 
   await app.listen(3004);
 }
+
 bootstrap();

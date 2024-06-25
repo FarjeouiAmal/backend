@@ -19,10 +19,9 @@ export class RepasController {
 
   @Patch(':id')
   async updateRepas(@Param('id') id: string, @Body() updateRepasDto: CreateRepasDto) {
-    // You may want to check the user role here to ensure it's 'resto'
     return this.repasService.updateRepas(id, updateRepasDto);
   }
-
+    
   @Delete(':id')
   async deleteRepas(@Param('id') id: string) {
     // You may want to check the user role here to ensure it's 'resto'

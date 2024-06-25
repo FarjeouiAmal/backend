@@ -16,4 +16,10 @@ export class OrdersController {
     async findAll() {
       return this.ordersService.findAll();
     }
+
+    @Get('count')
+  async getOrderCount(): Promise<{ count: number }> {
+    const count = await this.ordersService.getOrderCount();
+    return { count };
+  }
   }

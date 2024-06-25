@@ -36,11 +36,9 @@ export class RepasService {
 
   async updateRepas(id: string, updateRepasDto: CreateRepasDto): Promise<Repas> {
     const repas = await this.repasModel.findByIdAndUpdate(id, updateRepasDto, { new: true });
-
     if (!repas) {
       throw new NotFoundException(`Repas with ID ${id} not found`);
     }
-
     return repas;
   }
 

@@ -1,22 +1,63 @@
-export class RegisterUserDto {
-  prenom: string;
-  nom: string;
-  téléphone: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  role: string; // Ajoutez la propriété 'role' ici
+import { IsString, IsEmail, IsNotEmpty, IsOptional } from 'class-validator'; // Remove IsDate import
+import { Date as MongooseDate } from 'mongoose'; // Import Date type from mongoose
 
-  constructor(prenom: string, nom: string, email: string, password: string, téléphone: string, confirmPassword: string) {
+export class RegisterUserDto {
+
+  @IsNotEmpty()
+  @IsString()
+  password: string;
+
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+
+  @IsNotEmpty()
+  @IsString()
+  prenom: string;
+
+
+  @IsNotEmpty()
+  @IsString()
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  confirmPassword: string;
+
+
+  role: string;
+
+  constructor(prenom: string, nom: string, email: string, password: string, confirmPassword: string) {
     this.prenom = prenom;
-    this.nom = nom;
-    this.téléphone = téléphone;
+    this.name = nom;
     this.email = email;
     this.password = password;
     this.confirmPassword = confirmPassword;
     this.role = 'consommateur'; // Initialisez le rôle par défaut
-  }
+
 }
+}
+
+// export class RegisterUserDto {
+//   prenom: string;
+//   nom: string;
+//   téléphone: string;
+//   email: string;
+//   password: string;
+//   confirmPassword: string;
+//   role: string; // Ajoutez la propriété 'role' ici
+
+  // constructor(prenom: string, nom: string, email: string, password: string, téléphone: string, confirmPassword: string) {
+  //   this.prenom = prenom;
+  //   this.nom = nom;
+  //   this.téléphone = téléphone;
+  //   this.email = email;
+  //   this.password = password;
+  //   this.confirmPassword = confirmPassword;
+  //   this.role = 'consommateur'; // Initialisez le rôle par défaut
+  // }
+// }
 
 
 // import React, { useState, useEffect } from 'react';

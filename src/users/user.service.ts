@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 
+
 @Injectable()
 export class UserService {
   constructor(
@@ -72,7 +73,7 @@ export class UserService {
   async sendRegistrationEmail(registerUserDto: RegisterUserDto): Promise<void> {
     // Personnalisez le contenu de l'e-mail
     const emailContent = `
-      <p>Bonjour ${registerUserDto.nom},</p>
+      <p>Bonjour ${registerUserDto.name},</p>
       <p>Votre inscription a été réussie avec succès.</p>
       <p>Merci de vous être inscrit sur KOOL'UP.</p>
       <p>Cordialement,</p>
@@ -96,21 +97,22 @@ export class UserService {
   
   
   async createResto(createUserDto: CreateUserDto): Promise<User> {
-    // Assuming the user creating the restaurant is always an admin
     createUserDto.role = 'resto';
-  
-    // Hash the password before saving the user
+
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
     createUserDto.password = hashedPassword;
 
+    if (createUserDto.imagePath) {
+      console.log(`Image path: ${createUserDto.imagePath}`);
+    }
+
     const user = new this.userModel(createUserDto);
-    console.log(user)
     const createdUser = await user.save();
-  
+
     return createdUser;
   }
-  
 
+  
   async createLivreur(createUserDto: CreateUserDto): Promise<User> {
     
     createUserDto.role = 'livreur';
@@ -140,11 +142,15 @@ export class UserService {
 
 
   async deleteUserById(id: string): Promise<void> {
-    const result = await this.userModel.deleteOne({ _id: id });
+    const user = await this.userModel.findById(id);
 
-    if (result.deletedCount === 0) {
+    if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
+
+    // Soft delete: Update isActive status to false
+
+    await user.save();
   }
 
 

@@ -1,4 +1,4 @@
-import { Body, Controller, UseGuards, Delete, Get, Param, Post, Put, Headers, Query  } from '@nestjs/common';
+import { Body, Controller, UseGuards, Delete, Get, Param, Post, Put, Headers, Query, UploadedFile, UseInterceptors  } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
@@ -9,15 +9,16 @@ import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { User, UserRole } from './entity/user.entity';
 import { Admin, Resto } from 'src/auth/Roles/adminResto.decorator';
 import { RegisterUserDto } from './dto/register-user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Express } from 'express';
 
 
 @Controller('users')
 export class UserController {
-  constructor(private  userService: UserService) {}
+  constructor(private userService: UserService) {}
 
   @Post('register')
   async registerUser(@Body() registerUserDto: RegisterUserDto) {
-    // Appelez la méthode du service d'utilisateur pour l'enregistrement
     try {
       const newUser = await this.userService.registerUser(registerUserDto);
       return { message: 'User registered successfully', user: newUser };
@@ -25,36 +26,37 @@ export class UserController {
       return { message: 'Error registering user', error: error.message };
     }
   }
-  // @Post()
-  // @UseGuards(RolesGuard)
-  // async createUser(@Body() createUserDto: CreateUserDto) {
-  //   return this.userService.createUser(createUserDto);
-  // }
 
   @Post('create-resto')
-  async createResto(@Body() createUserDto: CreateUserDto) {
+@UseInterceptors(FileInterceptor('image'))
+async createResto(@Body() createUserDto: CreateUserDto, @UploadedFile() file: Express.Multer.File) {
+    if (file) {
+        createUserDto.imagePath = `http://localhost:3004/uploads/${file.filename}`; // Full URL of the image
+    }
     return this.userService.createResto(createUserDto);
-  }
+}
 
 
   @Post('create-livreur')
   async createLivreur(@Body() createUserDto: CreateUserDto) {
     return this.userService.createLivreur(createUserDto);
   }
-  
 
   @Put(':id')
   async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.updateUser(id, updateUserDto);
   }
 
-  
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
-    return this.userService.deleteUserById(id);
+    try {
+      await this.userService.deleteUserById(id);
+      return { message: 'User deleted successfully' };
+    } catch (error) {
+      return { message: 'Error deleting user', error: error.message };
+    }
   }
 
-  
   @Get('/:id')
   async getUserById(@Param('id') id: string) {
     return this.userService.getUserById(id);
@@ -65,8 +67,6 @@ export class UserController {
     return this.userService.getUserByName(name);
   }
 
-
-  
   @Get('adresse/:adresse')
   async getUserByAdresse(@Param('adresse') adresse: string) {
     return this.userService.getUserByAdresse(adresse);
@@ -77,8 +77,6 @@ export class UserController {
     return this.userService.getUserByTelephone(telephone);
   }
 
-  
- 
   @Get()
   async getUsers(@Query('role') role?: string): Promise<User[]> {
     switch (role) {
@@ -92,7 +90,6 @@ export class UserController {
         throw new Error("Invalid role parameter. Only 'resto', 'consommateur', or 'livreur' roles are supported.");
     }
   }
-
 
   @Get('count/livreurs')
   async countLivreur(): Promise<{ count: number }> {
@@ -113,6 +110,11 @@ export class UserController {
   }
 
   
+ // @Post()
+  // @UseGuards(RolesGuard)
+  // async createUser(@Body() createUserDto: CreateUserDto) {
+  //   return this.userService.createUser(createUserDto);
+  // }
 
 
 
@@ -129,6 +131,4 @@ export class UserController {
   // async deleteUser(@Param('id') id: string) {
   //   return this.userService.deleteUserById(id);
   // }
-
 }
- 

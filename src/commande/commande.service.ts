@@ -9,12 +9,28 @@ import { OrderDocument } from './entity/commande.entity';
 export class OrdersService {
   constructor(@InjectModel(Order.name) private orderModel: Model<OrderDocument>) {}
 
-  async create(createOrderDto: CreateOrderDto) {
-    const newOrder = new this.orderModel(createOrderDto);
+  async create(createOrderDto: CreateOrderDto): Promise<Order> {
+    const orderDate = new Date();
+    const orderDay = this.getDayOfWeek(orderDate);
+
+    const newOrder = new this.orderModel({
+      ...createOrderDto,
+      orderDate,
+      orderDay,
+    });
+
     return newOrder.save();
   }
 
+  private getDayOfWeek(date: Date): string {
+    const days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+    return days[date.getUTCDay()];
+  }
   async findAll() {
     return this.orderModel.find().exec();
+  }
+
+  async getOrderCount(): Promise<number> {
+    return await this.orderModel.countDocuments(); // Use countDocuments method for Mongoose models
   }
 }

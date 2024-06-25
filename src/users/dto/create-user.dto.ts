@@ -1,7 +1,5 @@
-// create-user.dto.ts
-
-import { IsString, IsEmail, IsNotEmpty, IsOptional, IsDate } from 'class-validator';
-import { Date } from 'mongoose';
+import { IsString, IsEmail, IsNotEmpty, IsOptional } from 'class-validator'; // Remove IsDate import
+import { Date as MongooseDate } from 'mongoose'; // Import Date type from mongoose
 
 export class CreateUserDto {
 
@@ -14,6 +12,7 @@ export class CreateUserDto {
   name: string;
 
   @IsNotEmpty()
+  @IsString()
   telephone: string; 
 
   @IsNotEmpty()
@@ -32,10 +31,10 @@ export class CreateUserDto {
   @IsString()
   role: string;
 
-
+  imagePath?: string;
 
   @IsOptional()
-  resetTokenExpires: Date;
+  resetTokenExpires: MongooseDate; // Use MongooseDate type here
 
   @IsOptional()
   resetToken: string;
